@@ -12,6 +12,7 @@ using PizzaManagement.service;
 using PizzaManagement.Service;
 using PizzaManagement.MiddleWare;
 using Serilog;
+using PizzaManagement.IService;
 
 
 Log.Logger = new LoggerConfiguration()
@@ -87,6 +88,7 @@ try
     builder.Services.AddTransient<MLTrainer>();
     builder.Services.AddScoped<RecommendationService>();
     builder.Services.AddScoped<IOrderService, OrderService>();
+    builder.Services.AddScoped<IVnPayService, VnPayService>();
     builder.Services.AddExceptionHandler<ExceptionHandling>();
     builder.Services.AddProblemDetails();
 
@@ -103,8 +105,10 @@ try
         c.RoutePrefix = "swagger";
     });
 
-    app.UseHttpsRedirection();
-
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
     app.UseAuthentication();
 
     app.UseAuthorization();

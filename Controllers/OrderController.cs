@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using PizzaManagement.Data;
 using PizzaManagement.DataRequest;
 using PizzaManagement.DataResponse;
+using PizzaManagement.IService;
 using PizzaManagement.model;
-using PizzaManagement.service;
 
 namespace PizzaManagement.Controllers
 {
@@ -130,6 +130,15 @@ namespace PizzaManagement.Controllers
         {
             await _orderService.ProcessPayment(id);
             return NoContent();
+        }
+
+        [Authorize(Roles = "Admin, User")]
+        [HttpGet("{orderId}/status")]
+        public async Task<ActionResult<string>> GetOrderStatus(int orderId)
+        {
+            int userId = int.Parse(User.FindFirst("UserId")!.Value);
+            var status = await _orderService.GetOrderStatus(orderId, userId);
+            return Ok(status);
         }
     }
 }

@@ -2,6 +2,7 @@
 using PizzaManagement.Data;
 using PizzaManagement.DataRequest;
 using PizzaManagement.DataResponse;
+using PizzaManagement.IService;
 using PizzaManagement.model;
 using PizzaManagement.Service;
 
@@ -87,6 +88,34 @@ namespace PizzaManagement.service
             }
         }
 
+        public async Task<decimal> GetAmountOrder(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.Details)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+            {
+                throw new Exception("Order is not found");
+            }
+            else if (order.status != OrderStatus.Pending) 
+            {
+                throw new Exception("Order is not pending");
+            }
+            return order.TotalPrice;
+        }
+
+        public async Task<string> GetOrderStatus(int orderId, int userId)
+        {
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+            if (order == null)
+            {
+                throw new Exception("Order is not found");
+            }
+            return order.status!;
+        }
+
         public async Task<bool> ProcessPayment(int orderId)
         {
             using var transactions = await _context.Database.BeginTransactionAsync();
@@ -103,11 +132,7 @@ namespace PizzaManagement.service
                 {
                     throw new Exception("Order is not pending");
                 }
-                bool paymentSuccess = true;
-                if (!paymentSuccess)
-                {
-                    throw new Exception("Payment failed");
-                }
+        
                 order.status = OrderStatus.Paid;
                 order.PaidAt = DateTime.Now;
                 foreach (var detail in order.Details!)
@@ -137,10 +162,13 @@ namespace PizzaManagement.service
                 {
                     throw new Exception("Order not found");
                 }
-                var pizzaId = orderRequest.detailsRequests!.Select(p => p.PizzaId).Distinct().ToList();
+                var pizzaId = orderRequest.detailsRequests!
+                    .Select(p => p.PizzaId).Distinct().ToList();
+
                 var pirceDictionary = await _context.Pizza
                     .Where(p => pizzaId.Contains(p.Id))
                     .ToDictionaryAsync(p => p.Id, p => p.Price);
+
                 foreach (var item in orderRequest.detailsRequests!)
                 {
                     if (!pirceDictionary.ContainsKey(item.PizzaId))

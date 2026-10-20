@@ -1,7 +1,8 @@
 ﻿using PizzaManagement.DataRequest;
 using PizzaManagement.DataResponse;
+using PizzaManagement.model;
 
-namespace PizzaManagement.service
+namespace PizzaManagement.IService
 {
     public interface IOrderService
     {
@@ -12,5 +13,9 @@ namespace PizzaManagement.service
         Task<bool> UpdateOrder (int id, OrderRequest orderRequest);
 
         Task<bool> DeleteOrder(int id);
+
+        Task<decimal> GetAmountOrder (int orderId); 
+
+        Task<String> GetOrderStatus (int orderId, int userId);
     }
 }
